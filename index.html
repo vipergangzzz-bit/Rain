@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rain anti-cheat — Forge 1.8.9</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #050508;
+    color: #a1a1aa;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* --- Background "RAIN" --- */
+  .bg-word {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .bg-word span {
+    font-size: min(50vw, 800px);
+    font-weight: 900;
+    letter-spacing: -0.06em;
+    background: linear-gradient(180deg, rgba(239,68,68,0.04) 0%, rgba(239,68,68,0.01) 40%, transparent 70%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    user-select: none;
+    line-height: 1;
+    transform: translateY(-5%);
+  }
+
+  /* --- Glow orbs --- */
+  .glow {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(100px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .glow-1 {
+    width: 500px; height: 500px;
+    background: rgba(239,68,68,0.04);
+    top: -200px; right: -150px;
+  }
+  .glow-2 {
+    width: 400px; height: 400px;
+    background: rgba(249,115,22,0.03);
+    bottom: -150px; left: -100px;
+  }
+
+  .container {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 100px 24px 100px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* --- Hero --- */
+  .hero { margin-bottom: 70px; }
+
+  .hero h1 {
+    font-size: 4.4em;
+    font-weight: 800;
+    letter-spacing: -2.5px;
+    color: #fff;
+    line-height: 1;
+    margin-bottom: 14px;
+  }
+
+  .hero h1 .grad {
+    background: linear-gradient(135deg, #ef4444 0%, #f97316 50%, #fbbf24 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero p {
+    font-size: 1.1em;
+    color: #555;
+    max-width: 440px;
+    margin-bottom: 36px;
+    line-height: 1.6;
+  }
+
+  .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .btn {
+    display: inline-block;
+    background: #fff;
+    color: #000;
+    padding: 9px 28px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.88em;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+  .btn:hover { background: #e4e4e7; transform: translateY(-1px); }
+
+  .btn-ghost {
+    background: transparent;
+    color: #555;
+    border: 1px solid #1a1a1e;
+  }
+  .btn-ghost:hover { color: #a1a1aa; border-color: #2a2a2e; background: rgba(255,255,255,0.02); }
+
+  /* --- Stats --- */
+  .stats {
+    display: flex;
+    gap: 48px;
+    margin-bottom: 70px;
+    padding: 24px 0;
+    border-top: 1px solid #0f0f12;
+    border-bottom: 1px solid #0f0f12;
+  }
+  .stat h3 {
+    font-size: 1.8em;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+  .stat p {
+    font-size: 0.8em;
+    color: #555;
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* --- Sections --- */
+  .section { margin-bottom: 64px; }
+  .section:last-of-type { margin-bottom: 0; }
+
+  .section h2 {
+    font-size: 0.75em;
+    font-weight: 600;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 18px;
+  }
+
+  /* --- Checks --- */
+  .checks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .checks span {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid #141418;
+    border-radius: 8px;
+    padding: 7px 16px;
+    font-size: 0.85em;
+    color: #71717a;
+    transition: all 0.2s;
+    font-weight: 500;
+  }
+  .checks span:hover {
+    border-color: rgba(239,68,68,0.15);
+    color: #ef4444;
+    background: rgba(239,68,68,0.04);
+  }
+
+  /* --- Install steps --- */
+  ol {
+    list-style: none;
+    counter-reset: step;
+    display: grid;
+    gap: 6px;
+  }
+  ol li {
+    counter-increment: step;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid #0f0f12;
+    border-radius: 8px;
+    font-size: 0.9em;
+    color: #71717a;
+    transition: border-color 0.2s;
+  }
+  ol li:hover { border-color: #1a1a1e; }
+  ol li::before {
+    content: counter(step);
+    color: #555;
+    font-weight: 600;
+    font-size: 0.8em;
+    width: 18px;
+    flex-shrink: 0;
+  }
+  ol li strong { color: #d4d4d8; }
+  ol li code {
+    background: #0f0f12;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 0.88em;
+    color: #f87171;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+
+  /* --- Grid cards --- */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .card {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid #0f0f12;
+    border-radius: 10px;
+    padding: 20px;
+    transition: all 0.2s;
+  }
+  .card:hover {
+    border-color: #1a1a1e;
+    background: rgba(255,255,255,0.03);
+  }
+  .card strong {
+    display: block;
+    color: #d4d4d8;
+    font-size: 0.93em;
+    margin-bottom: 4px;
+  }
+  .card span {
+    color: #555;
+    font-size: 0.86em;
+    line-height: 1.55;
+    display: block;
+  }
+
+  /* --- Inline --- */
+  p { color: #555; font-size: 0.93em; margin-bottom: 10px; }
+
+  kbd {
+    display: inline-block;
+    background: #0f0f12;
+    border: 1px solid #1a1a1e;
+    border-radius: 4px;
+    padding: 1px 8px;
+    font-size: 0.82em;
+    font-family: inherit;
+    color: #d4d4d8;
+  }
+
+  /* --- Footer --- */
+  footer {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid #0f0f12;
+    font-size: 0.8em;
+    color: #333;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  footer a {
+    color: #555;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  footer a:hover { color: #a1a1aa; }
+  footer span { margin-left: auto; color: #2a2a2e; }
+
+  /* --- Responsive --- */
+  @media (max-width: 640px) {
+    .hero h1 { font-size: 2.6em; }
+    .stats { gap: 24px; flex-wrap: wrap; }
+    .grid { grid-template-columns: 1fr; }
+    .container { padding: 60px 16px 80px; }
+    footer span { margin-left: 0; width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-word"><span>RAIN</span></div>
+<div class="glow glow-1"></div>
+<div class="glow glow-2"></div>
+
+<div class="container">
+
+  <div class="hero">
+    <h1><span class="grad">Rain</span> anti-cheat</h1>
+    <p>Observer-side client mod for Forge 1.8.9. Detects cheats by watching other players around you.</p>
+    <div class="btns">
+      <a class="btn" href="rain AC.jar" download>Download</a>
+      <a class="btn btn-ghost" href="#checks">Checks</a>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><h3>11</h3><p>detections</p></div>
+    <div class="stat"><h3>288 KB</h3><p>jar size</p></div>
+    <div class="stat"><h3>1.8.9</h3><p>forge</p></div>
+  </div>
+
+  <div class="section" id="install">
+    <h2>Install</h2>
+    <ol>
+      <li><strong>Install Forge 1.8.9</strong> — Run the installer once, Make a Forge launcher profile</li>
+      <li><strong>Download the jar</strong> — Download <code>rain AC.jar</code> from the button above</li>
+      <li><strong>Copy to mods</strong> — Drop it in <code>%APPDATA%\.minecraft\mods</code></li>
+      <li><strong>Join a server</strong> — Launch Forge 1.8.9 and play</li>
+    </ol>
+  </div>
+
+  <div class="section" id="checks">
+    <h2>Checks</h2>
+    <div class="checks">
+      <span>Speed</span><span>Fly</span><span>Killaura</span><span>Auto Block</span><span>Reach</span>
+      <span>Anti KB</span><span>No Slow</span><span>Fast Use</span><span>Step</span><span>Scaffold</span><span>Anti Bot</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Usage</h2>
+    <p>Press <kbd>RShift</kbd> to open the GUI. Toggle checks, set flash and nametag colors. Flagged players show red in tab and in-world.</p>
+  </div>
+
+  <div class="section">
+    <h2>Features</h2>
+    <div class="grid">
+      <div class="card">
+        <strong>Observer-side</strong>
+        <span>Reads position, rotation, and state of entities around you using only data your client already receives.</span>
+      </div>
+      <div class="card">
+        <strong>Evidence ledger</strong>
+        <span>Flags from different detection families corroborate. One-off blips decay; multiple families together trigger an alert.</span>
+      </div>
+      <div class="card">
+        <strong>Reflection fallback</strong>
+        <span>No Searge mappings? No problem. Works on vanilla or other Forge versions without crashing.</span>
+      </div>
+      <div class="card">
+        <strong>Flash + nametags</strong>
+        <span>Screen flash and chat on first detection. Flagged players get colored nametags in-world and in tab.</span>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <a href="rain AC.jar" download>Download</a>
+    <a href="#">GitHub</a>
+    <a href="#">Docs</a>
+    <span>Rain anti-cheat — Forge 1.8.9</span>
+  </footer>
+
+</div>
+</body>
+</html>
